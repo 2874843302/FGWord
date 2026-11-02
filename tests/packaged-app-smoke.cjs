@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const assert = require('node:assert/strict')
-const { hashFile: hash } = require('./helpers/production-data')
+const { hashFile: hash } = require('./helpers/production-data.cjs')
 const { spawn } = require('child_process')
 const { once } = require('events')
 const asar = require('@electron/asar')

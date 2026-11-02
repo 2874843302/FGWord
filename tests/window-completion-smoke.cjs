@@ -1,7 +1,7 @@
 const { app } = require('electron')
 const fs = require('fs')
 const path = require('path')
-const { snapshotProductionData } = require('./helpers/production-data')
+const { snapshotProductionData } = require('./helpers/production-data.cjs')
 const assert = require('node:assert/strict')
 const root = path.resolve(__dirname, '..')
 const directory = path.join(root, '.test', `window-completion-${Date.now()}`)
