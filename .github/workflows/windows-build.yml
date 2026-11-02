@@ -1,0 +1,101 @@
+name: Windows build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  build:
+    name: Test and package Windows x64
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Check release tag matches package version
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          node -e 'const p=require("./package.json"); if(process.env.RELEASE_TAG !== "v"+p.version) throw new Error("Tag must equal v"+p.version)'
+      - name: Install locked dependencies
+        run: npm ci --registry=https://registry.npmjs.org
+      - name: Unit tests
+        run: npm test
+      - name: Build renderer and Windows installer
+        run: npm run package:win
+      - name: Electron integration tests
+        run: |
+          $tests = @('test:electron', 'test:selection', 'test:window-completion', 'test:next-word', 'test:autostart', 'test:tray-storage', 'test:mouse-passthrough', 'test:example-translations')
+          foreach ($test in $tests) {
+            npm run $test
+            if ($LASTEXITCODE -ne 0) { throw "Failed: $test" }
+          }
+      - name: Verify packaged application with isolated data
+        run: npm run test:packaged -- release/win-unpacked
+      - name: Generate installer checksum
+        run: node scripts/checksums.mjs
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: WordGlass-Windows-x64-${{ github.run_number }}
+          path: |
+            release/WordGlass-Setup-*-x64.exe
+            release/WordGlass-Setup-*-x64.exe.sha256
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: Windows-test-reports-${{ github.run_number }}
+          path: .test/report/
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
+
+  release:
+    name: Publish versioned installer
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/') && github.event_name == 'push'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download this run's installer and publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_ID: ${{ github.run_id }}
+          ARTIFACT_NAME: WordGlass-Windows-x64-${{ github.run_number }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: pwsh
+        run: |
+          gh run download $env:RUN_ID --name $env:ARTIFACT_NAME --dir release
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to download installer' }
+          $assets = @(Get-ChildItem release -File | ForEach-Object { $_.FullName })
+          if ($assets.Count -ne 2) { throw 'Expected installer and SHA-256 checksum' }
+          gh release create $env:RELEASE_TAG @assets --verify-tag --generate-notes --title "浮光单词 $env:RELEASE_TAG"
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to publish release' }

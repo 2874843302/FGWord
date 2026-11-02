@@ -1,0 +1,8 @@
+{
+  "name": "ECDICT",
+  "revision": "ab22ad36302cafc6349a050e2b60894855208055",
+  "source": "https://github.com/skywind3000/ECDICT",
+  "license": "MIT",
+  "entries": 770238,
+  "sha256": "d1ecbdf9ee2b920afb6f430ca6b6bb9f559588cf0dff86e04bd255f9390843cc"
+}

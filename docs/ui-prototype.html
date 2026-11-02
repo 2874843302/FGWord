@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Word Glass · UI 方案预览</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(1100px 620px at 12% -10%, rgba(60, 96, 160, .22), transparent 62%),
+      radial-gradient(900px 540px at 92% 8%, rgba(30, 130, 140, .14), transparent 60%),
+      #0a0d13;
+    color: #e9eef7;
+    font-family: "Segoe UI Variable Text", "Segoe UI", "PingFang SC", "Microsoft YaHei UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input, select { font: inherit; }
+
+  .page { max-width: 1080px; margin: 0 auto; padding: 34px 28px 56px; }
+
+  /* ---------- 页头 ---------- */
+  .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-size: 19px; font-weight: 650; letter-spacing: .2px; }
+  .brand .mark {
+    width: 30px; height: 30px; border-radius: 10px;
+    background: linear-gradient(145deg, rgba(124,231,255,.9), rgba(167,139,250,.85));
+    box-shadow: 0 6px 18px rgba(90, 200, 255, .28), inset 0 1px 0 rgba(255,255,255,.65);
+    display: grid; place-items: center; color: #061319; font-size: 15px; font-weight: 800;
+  }
+  .brand .tag {
+    font-size: 11px; font-weight: 500; letter-spacing: .08em; color: rgba(233,238,247,.45);
+    border: 1px solid rgba(255,255,255,.10); border-radius: 999px; padding: 3px 9px;
+  }
+  .head p { margin: 0; max-width: 560px; font-size: 12.5px; line-height: 1.75; color: rgba(233,238,247,.5); text-align: right; }
+
+  /* ---------- 工具栏 ---------- */
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+    padding: 12px 14px; margin-bottom: 26px;
+    background: rgba(255,255,255,.035);
+    border: 1px solid rgba(255,255,255,.075);
+    border-radius: 16px;
+    backdrop-filter: blur(18px);
+  }
+  .ctl { display: flex; align-items: center; gap: 8px; }
+  .ctl > span { font-size: 11px; letter-spacing: .09em; color: rgba(233,238,247,.38); white-space: nowrap; }
+  .seg { display: flex; gap: 3px; padding: 3px; background: rgba(0,0,0,.24); border: 1px solid rgba(255,255,255,.06); border-radius: 11px; }
+  .seg button {
+    border: 0; background: transparent; color: rgba(233,238,247,.55);
+    font-size: 12px; padding: 6px 11px; border-radius: 8px; cursor: pointer;
+    transition: color .16s, background .16s, box-shadow .16s;
+    white-space: nowrap;
+  }
+  .seg button:hover { color: rgba(233,238,247,.85); }
+  .seg button.on {
+    color: #eaf8ff; background: rgba(124,231,255,.13);
+    box-shadow: inset 0 0 0 1px rgba(124,231,255,.24);
+  }
+  .switches { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+  .switch { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: rgba(233,238,247,.6); cursor: pointer; user-select: none; }
+  .switch input { accent-color: #7ce7ff; width: 14px; height: 14px; cursor: pointer; }
+
+  /* ---------- 舞台 ---------- */
+  .stage { display: grid; grid-template-columns: minmax(0, 1fr) 336px; gap: 34px; align-items: start; }
+  .desktop-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+
+  .desktop {
+    position: relative; width: 100%; max-width: 600px; height: 650px;
+    border-radius: 26px; overflow: hidden;
+    display: grid; place-items: center;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06), 0 30px 80px rgba(0,0,0,.45);
+    transition: background .35s ease;
+  }
+  .desktop[data-wall="white"] {
+    background:
+      radial-gradient(700px 420px at 18% 8%, rgba(255,255,255,.92), transparent 62%),
+      linear-gradient(158deg, #f6f8fc 0%, #e8edf5 58%, #dee5ef 100%);
+  }
+  .desktop[data-wall="dark"] {
+    background:
+      radial-gradient(640px 420px at 84% 2%, rgba(78, 112, 190, .34), transparent 62%),
+      radial-gradient(560px 400px at 6% 100%, rgba(24, 128, 128, .22), transparent 62%),
+      linear-gradient(158deg, #0b1020 0%, #121a2c 58%, #0a0f1a 100%);
+  }
+  .desktop[data-wall="color"] {
+    background:
+      radial-gradient(520px 380px at 12% 16%, rgba(255, 118, 214, .52), transparent 66%),
+      radial-gradient(600px 440px at 88% 26%, rgba(78, 196, 255, .5), transparent 66%),
+      radial-gradient(620px 520px at 48% 106%, rgba(138, 96, 255, .58), transparent 68%),
+      linear-gradient(142deg, #2a1a4a 0%, #12385a 52%, #0b1a32 100%);
+  }
+  .desktop::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background-image: radial-gradient(rgba(255,255,255,.11) .5px, transparent .6px);
+    background-size: 3px 3px;
+    opacity: .18; mix-blend-mode: overlay;
+  }
+  .desk-shape { position: absolute; border-radius: 50%; filter: blur(46px); pointer-events: none; }
+  .desk-shape.a { width: 260px; height: 260px; left: -70px; bottom: -60px; background: rgba(255,255,255,.5); opacity: .35; }
+  .desk-shape.b { width: 220px; height: 220px; right: -50px; top: -60px; background: rgba(120,190,255,.5); opacity: .3; }
+
+  .caption { font-size: 11px; letter-spacing: .06em; color: rgba(233,238,247,.32); }
+
+  /* ---------- 应用窗口（360 × 520） ---------- */
+  .win { position: relative; width: 360px; height: 520px; padding: 14px; z-index: 2; }
+
+  .sheet {
+    position: relative;
+    height: 150px;
+    display: flex; flex-direction: column;
+    border-radius: 24px;
+    overflow: hidden;
+    background: linear-gradient(155deg, var(--glass-a), var(--glass-b));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(30px) saturate(180%);
+    -webkit-backdrop-filter: blur(30px) saturate(180%);
+    transition: height .34s cubic-bezier(.22,.85,.25,1);
+    cursor: default;
+  }
+  .sheet.open { height: 492px; }
+
+  /* 极光方案内部色晕 */
+  .sheet::before {
+    content: ""; position: absolute; inset: -35%; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(closest-side at 24% 16%, rgba(64, 220, 255, .30), transparent 72%),
+      radial-gradient(closest-side at 82% 90%, rgba(150, 100, 255, .28), transparent 72%);
+    filter: blur(12px);
+    opacity: 0; transition: opacity .3s;
+  }
+  body[data-variant="aurora"] .sheet::before { opacity: 1; }
+  .sheet > * { position: relative; z-index: 1; }
+
+  .grip {
+    position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+    width: 38px; height: 4px; border-radius: 3px;
+    background: var(--grip); z-index: 3;
+    -webkit-app-region: drag; cursor: grab;
+  }
+
+  .head-area {
+    padding: 24px 20px 14px;
+    text-align: center;
+    transition: padding .3s cubic-bezier(.22,.85,.25,1);
+    flex: none;
+  }
+  .sheet.open .head-area { padding: 18px 20px 10px; }
+
+  .pill {
+    display: inline-block;
+    font-size: 10px; line-height: 1; letter-spacing: .1em;
+    color: var(--ink-3);
+    border: 1px solid var(--divider);
+    background: var(--pill-bg);
+    border-radius: 999px;
+    padding: 4px 8px;
+    margin-bottom: 9px;
+    transition: opacity .25s;
+  }
+  .word {
+    font-size: 31px; font-weight: 650; letter-spacing: -.02em; line-height: 1.12;
+    color: var(--ink);
+    text-shadow: var(--word-shadow);
+    word-break: break-word;
+    transition: font-size .3s cubic-bezier(.22,.85,.25,1), letter-spacing .3s;
+  }
+  .sheet.open .word { font-size: 25px; }
+  .phonetic {
+    margin-top: 6px;
+    font-size: 13.5px; letter-spacing: .03em;
+    color: var(--accent-ink);
+    font-variant-numeric: tabular-nums;
+    transition: margin .3s;
+  }
+  .sheet.open .phonetic { margin-top: 4px; font-size: 12.5px; }
+
+  .hint {
+    margin-top: 11px;
+    font-size: 10.5px; letter-spacing: .12em;
+    color: var(--ink-3);
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: opacity .2s, height .3s, margin .3s;
+  }
+  .hint::before {
+    content: ""; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--accent); box-shadow: 0 0 8px var(--accent);
+  }
+  .sheet.open .hint { opacity: 0; height: 0; margin: 0; overflow: hidden; }
+
+  .rule {
+    height: 1px; margin: 0 18px; background: var(--divider);
+    opacity: 0; transition: opacity .25s; flex: none;
+  }
+  .sheet.open .rule { opacity: 1; }
+
+  .detail {
+    flex: 1; min-height: 0;
+    overflow-y: auto;
+    padding: 14px 18px 18px;
+    opacity: 0; transform: translateY(7px);
+    transition: opacity .24s ease, transform .28s cubic-bezier(.22,.85,.25,1);
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll) transparent;
+  }
+  .sheet.open .detail { opacity: 1; transform: none; transition-delay: .06s; }
+  .detail::-webkit-scrollbar { width: 5px; }
+  .detail::-webkit-scrollbar-thumb { background: var(--scroll); border-radius: 3px; }
+  .detail::-webkit-scrollbar-track { background: transparent; }
+
+  .block { margin-bottom: 15px; }
+  .block:last-child { margin-bottom: 0; }
+  .label {
+    font-size: 10px; font-weight: 650; letter-spacing: .16em;
+    color: var(--ink-3);
+    margin-bottom: 7px;
+  }
+  .row {
+    display: flex; align-items: baseline; gap: 8px;
+    font-size: 12.8px; line-height: 1.62;
+    color: var(--ink-2);
+    margin-bottom: 5px;
+  }
+  .row:last-child { margin-bottom: 0; }
+  .pos {
+    flex: none;
+    font-size: 10.5px; font-weight: 650; line-height: 1;
+    color: var(--accent-ink);
+    background: var(--accent-bg);
+    border: 1px solid var(--accent-border);
+    border-radius: 5px;
+    padding: 4px 6px;
+    letter-spacing: .04em;
+  }
+  .bullet {
+    flex: none; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--phrase); margin-top: 8px;
+    box-shadow: 0 0 8px var(--phrase-glow);
+  }
+  .phrase-en { color: var(--phrase); font-weight: 600; }
+  .phrase-zh { color: var(--ink-2); }
+
+  .example {
+    padding-left: 10px;
+    border-left: 2px solid var(--accent-border);
+    margin-bottom: 9px;
+  }
+  .example:last-child { margin-bottom: 0; }
+  .example .en { display: block; font-size: 12.6px; line-height: 1.6; color: var(--ink-2); font-style: italic; }
+  .example .zh { display: block; margin-top: 2px; font-size: 11.8px; line-height: 1.6; color: var(--ink-3); }
+
+  .empty-note {
+    font-size: 11.5px; line-height: 1.7; color: var(--ink-3);
+    border: 1px dashed var(--divider);
+    border-radius: 10px; padding: 10px 12px;
+  }
+
+  @keyframes wordIn {
+    from { opacity: 0; transform: translateY(7px); filter: blur(2px); }
+    to { opacity: 1; transform: none; filter: none; }
+  }
+  .sheet.swap .word, .sheet.swap .phonetic, .sheet.swap .pill { animation: wordIn .34s cubic-bezier(.22,.85,.25,1); }
+
+  /* ---------- 齿轮 ---------- */
+  .gear {
+    position: absolute; top: 24px; right: 24px; z-index: 5;
+    width: 32px; height: 32px; border-radius: 50%;
+    display: grid; place-items: center;
+    color: var(--gear-ink);
+    background: var(--gear-bg);
+    border: 1px solid var(--gear-border);
+    box-shadow: inset 0 1px 0 var(--gear-highlight);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    cursor: pointer;
+    transition: background .18s, transform .24s, color .18s;
+    -webkit-app-region: no-drag;
+  }
+  .gear:hover { transform: rotate(38deg); background: var(--gear-hover); }
+  .gear:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- 管理面板 ---------- */
+  .manager {
+    position: absolute; inset: 14px; z-index: 8;
+    display: flex; flex-direction: column;
+    border-radius: 22px; overflow: hidden;
+    background: linear-gradient(160deg, var(--panel-a), var(--panel-b));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(34px) saturate(170%);
+    -webkit-backdrop-filter: blur(34px) saturate(170%);
+    opacity: 0; visibility: hidden; transform: translateY(8px) scale(.985);
+    transition: opacity .2s, transform .24s cubic-bezier(.22,.85,.25,1), visibility .2s;
+  }
+  .manager.show { opacity: 1; visibility: visible; transform: none; }
+  .manager-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; border-bottom: 1px solid var(--divider); flex: none;
+  }
+  .tabs { display: flex; gap: 2px; }
+  .tabs button {
+    border: 0; background: transparent; color: var(--ink-3);
+    font-size: 12.5px; padding: 6px 12px; border-radius: 9px; cursor: pointer;
+    transition: background .16s, color .16s;
+  }
+  .tabs button:hover { color: var(--ink-2); background: var(--pill-bg); }
+  .tabs button.on { color: var(--ink); background: var(--tab-on); box-shadow: inset 0 0 0 1px var(--divider); }
+  .m-close {
+    width: 28px; height: 28px; border-radius: 50%; border: 0;
+    display: grid; place-items: center;
+    background: var(--pill-bg); color: var(--ink-3); cursor: pointer;
+    transition: background .16s, color .16s;
+  }
+  .m-close:hover { background: var(--tab-on); color: var(--ink); }
+  .manager-body { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 6px; font-size: 11.5px; color: var(--ink-2); }
+  .field input, .field select {
+    width: 100%; padding: 8px 10px; border-radius: 9px;
+    border: 1px solid var(--input-border);
+    background: var(--input-bg);
+    color: var(--ink);
+    font-size: 12.5px; outline: none;
+    transition: border-color .16s, box-shadow .16s;
+  }
+  .field input:focus, .field select:focus { border-color: var(--accent-border); box-shadow: 0 0 0 3px var(--accent-bg); }
+  .field input::placeholder { color: var(--ink-3); }
+  .field select option { background: var(--panel-b); color: var(--ink); }
+  .actions { display: flex; gap: 8px; }
+  .actions button {
+    border: 1px solid var(--input-border); border-radius: 9px;
+    background: var(--pill-bg); color: var(--ink-2);
+    padding: 8px 14px; font-size: 12.5px; cursor: pointer;
+    transition: background .16s, color .16s;
+  }
+  .actions button:hover { background: var(--tab-on); color: var(--ink); }
+  .actions button.primary {
+    background: var(--primary-bg); color: var(--primary-ink);
+    border: 0; font-weight: 650;
+    box-shadow: 0 6px 16px var(--primary-glow);
+  }
+  .tip { margin: 2px 0 0; font-size: 11px; line-height: 1.7; color: var(--ink-3); }
+
+  /* ---------- 右侧说明 ---------- */
+  .notes {
+    padding: 18px 18px 16px;
+    background: rgba(255,255,255,.035);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px;
+    position: sticky; top: 24px;
+  }
+  .notes .ntag {
+    display: inline-block; font-size: 10px; letter-spacing: .12em;
+    color: #9cefff; background: rgba(124,231,255,.10);
+    border: 1px solid rgba(124,231,255,.22); border-radius: 999px;
+    padding: 3px 8px; margin-bottom: 10px;
+  }
+  .notes h2 { margin: 0 0 8px; font-size: 16px; font-weight: 650; letter-spacing: .2px; }
+  .notes .desc { margin: 0 0 14px; font-size: 12.5px; line-height: 1.75; color: rgba(233,238,247,.58); }
+  .notes ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 9px; }
+  .notes li { position: relative; padding-left: 16px; font-size: 12px; line-height: 1.65; color: rgba(233,238,247,.66); }
+  .notes li::before {
+    content: ""; position: absolute; left: 0; top: 7px;
+    width: 5px; height: 5px; border-radius: 50%;
+    background: rgba(124,231,255,.65); box-shadow: 0 0 8px rgba(124,231,255,.5);
+  }
+  .notes .pick {
+    margin-top: 16px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.08);
+    font-size: 11.5px; line-height: 1.7; color: rgba(233,238,247,.42);
+  }
+
+  /* ---------- 变更清单 ---------- */
+  .changes { margin-top: 34px; }
+  .changes h3 {
+    margin: 0 0 14px; font-size: 12px; font-weight: 600;
+    letter-spacing: .14em; color: rgba(233,238,247,.42);
+  }
+  .change-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .change {
+    padding: 13px 14px; border-radius: 14px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.07);
+  }
+  .change b { display: block; font-size: 12.5px; font-weight: 600; color: rgba(233,238,247,.82); margin-bottom: 4px; }
+  .change span { font-size: 11.5px; line-height: 1.65; color: rgba(233,238,247,.46); }
+
+  /* ---------- 方案主题变量 ---------- */
+  body[data-variant="smoke"] {
+    --glass-a: rgba(32, 38, 52, .86);
+    --glass-b: rgba(13, 16, 24, .78);
+    --glass-border: rgba(255,255,255,.16);
+    --ink: #f6f9ff;
+    --ink-2: rgba(230, 239, 255, .66);
+    --ink-3: rgba(230, 239, 255, .44);
+    --accent: #7ce7ff;
+    --accent-ink: #a6edff;
+    --accent-bg: rgba(124, 231, 255, .12);
+    --accent-border: rgba(124, 231, 255, .26);
+    --phrase: #ffd18a;
+    --phrase-glow: rgba(255, 209, 138, .5);
+    --divider: rgba(255,255,255,.09);
+    --pill-bg: rgba(255,255,255,.055);
+    --tab-on: rgba(255,255,255,.10);
+    --grip: rgba(255,255,255,.24);
+    --word-shadow: 0 2px 18px rgba(0,0,0,.32);
+    --shadow: 0 26px 70px rgba(3,6,12,.52), inset 0 1px 0 rgba(255,255,255,.19);
+    --gear-bg: rgba(255,255,255,.10);
+    --gear-border: rgba(255,255,255,.18);
+    --gear-ink: rgba(255,255,255,.86);
+    --gear-hover: rgba(255,255,255,.20);
+    --gear-highlight: rgba(255,255,255,.18);
+    --panel-a: rgba(26, 31, 44, .95);
+    --panel-b: rgba(12, 15, 22, .93);
+    --input-bg: rgba(255,255,255,.07);
+    --input-border: rgba(255,255,255,.14);
+    --primary-bg: linear-gradient(135deg, #7ce7ff, #9dfff0);
+    --primary-ink: #06262e;
+    --primary-glow: rgba(80, 220, 255, .25);
+    --scroll: rgba(255,255,255,.18);
+  }
+  body[data-variant="frost"] {
+    --glass-a: rgba(255, 255, 255, .84);
+    --glass-b: rgba(255, 255, 255, .64);
+    --glass-border: rgba(255,255,255,.88);
+    --ink: #17202c;
+    --ink-2: rgba(23, 32, 44, .68);
+    --ink-3: rgba(23, 32, 44, .46);
+    --accent: #2463eb;
+    --accent-ink: #1d54d6;
+    --accent-bg: rgba(36, 99, 235, .09);
+    --accent-border: rgba(36, 99, 235, .20);
+    --phrase: #a45c00;
+    --phrase-glow: rgba(200, 130, 30, .35);
+    --divider: rgba(15, 23, 42, .10);
+    --pill-bg: rgba(15,23,42,.045);
+    --tab-on: rgba(15,23,42,.06);
+    --grip: rgba(23,32,44,.18);
+    --word-shadow: 0 1px 0 rgba(255,255,255,.7);
+    --shadow: 0 26px 70px rgba(22,32,50,.26), inset 0 1px 0 rgba(255,255,255,.95);
+    --gear-bg: rgba(255,255,255,.66);
+    --gear-border: rgba(15,23,42,.10);
+    --gear-ink: rgba(23,32,44,.72);
+    --gear-hover: rgba(255,255,255,.92);
+    --gear-highlight: rgba(255,255,255,.9);
+    --panel-a: rgba(255,255,255,.96);
+    --panel-b: rgba(247,249,252,.94);
+    --input-bg: rgba(15,23,42,.045);
+    --input-border: rgba(15,23,42,.12);
+    --primary-bg: linear-gradient(135deg, #3b82f6, #2563eb);
+    --primary-ink: #ffffff;
+    --primary-glow: rgba(37, 99, 235, .28);
+    --scroll: rgba(15,23,42,.18);
+  }
+  body[data-variant="aurora"] {
+    --glass-a: rgba(21, 28, 50, .84);
+    --glass-b: rgba(9, 12, 22, .76);
+    --glass-border: rgba(150, 185, 255, .22);
+    --ink: #f5f9ff;
+    --ink-2: rgba(226, 236, 255, .66);
+    --ink-3: rgba(226, 236, 255, .44);
+    --accent: #7ae7ff;
+    --accent-ink: #a8eeff;
+    --accent-bg: rgba(122, 231, 255, .11);
+    --accent-border: rgba(122, 231, 255, .24);
+    --phrase: #ffd18a;
+    --phrase-glow: rgba(255, 209, 138, .5);
+    --divider: rgba(255,255,255,.08);
+    --pill-bg: rgba(255,255,255,.05);
+    --tab-on: rgba(255,255,255,.09);
+    --grip: rgba(220,235,255,.26);
+    --word-shadow: 0 2px 20px rgba(0,0,0,.34);
+    --shadow: 0 26px 70px rgba(3,6,12,.55), 0 0 46px rgba(80,170,255,.10), inset 0 1px 0 rgba(210,230,255,.24);
+    --gear-bg: rgba(255,255,255,.09);
+    --gear-border: rgba(160,190,255,.24);
+    --gear-ink: rgba(235,244,255,.88);
+    --gear-hover: rgba(255,255,255,.18);
+    --gear-highlight: rgba(210,230,255,.22);
+    --panel-a: rgba(19, 25, 45, .95);
+    --panel-b: rgba(9, 12, 22, .93);
+    --input-bg: rgba(255,255,255,.06);
+    --input-border: rgba(160,190,255,.16);
+    --primary-bg: linear-gradient(135deg, #6ee7ff, #a78bfa);
+    --primary-ink: #08131f;
+    --primary-glow: rgba(140, 150, 255, .3);
+    --scroll: rgba(255,255,255,.18);
+  }
+
+  @media (max-width: 940px) {
+    .stage { grid-template-columns: 1fr; }
+    .notes { position: static; }
+    .head { flex-direction: column; align-items: flex-start; }
+    .head p { text-align: left; }
+    .change-grid { grid-template-columns: repeat(2, 1fr); }
+    .switches { margin-left: 0; }
+  }
+</style>
+</head>
+<body data-variant="smoke">
+  <div class="page">
+    <header class="head">
+      <div class="brand">
+        <span class="mark">W</span>
+        Word Glass
+        <span class="tag">UI 方案预览</span>
+      </div>
+      <p>下面是同一张卡片在 纯白 / 深色 / 彩色 桌面上的可读性对比。把鼠标移到卡片上展开详情，点击上方方案名切换材质。</p>
+    </header>
+
+    <div class="toolbar">
+      <div class="ctl">
+        <span>方案</span>
+        <div class="seg" id="variantSeg">
+          <button data-variant="smoke" class="on">A · 烟熏玻璃</button>
+          <button data-variant="frost">B · 霜白玻璃</button>
+          <button data-variant="aurora">C · 极光玻璃</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <span>桌面</span>
+        <div class="seg" id="wallSeg">
+          <button data-wall="white" class="on">纯白</button>
+          <button data-wall="dark">深色</button>
+          <button data-wall="color">彩色</button>
+        </div>
+      </div>
+      <div class="ctl">
+        <span>单词</span>
+        <div class="seg" id="wordSeg">
+          <button data-word="0" class="on">serendipity</button>
+          <button data-word="1">scrutinize</button>
+          <button data-word="2">resilient</button>
+        </div>
+      </div>
+      <div class="switches">
+        <label class="switch"><input type="checkbox" id="pin"> 固定展开</label>
+        <label class="switch"><input type="checkbox" id="managerToggle"> 管理面板</label>
+      </div>
+    </div>
+
+    <div class="stage">
+      <div class="desktop-wrap">
+        <div class="desktop" id="desktop" data-wall="white">
+          <div class="desk-shape a"></div>
+          <div class="desk-shape b"></div>
+
+          <div class="win">
+            <div class="sheet" id="sheet">
+              <div class="grip" title="拖动窗口"></div>
+              <div class="head-area">
+                <span class="pill" id="pill">示例</span>
+                <div class="word" id="wordText">serendipity</div>
+                <div class="phonetic" id="phoneticText">/ˌserənˈdɪpəti/</div>
+                <div class="hint">悬停查看词性 · 短语 · 例句</div>
+              </div>
+              <div class="rule"></div>
+              <div class="detail" id="detail"></div>
+            </div>
+
+            <button class="gear" id="gear" title="管理单词 / 分组 / 设置" aria-label="打开管理面板">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+                <circle cx="12" cy="12" r="3.1"></circle>
+                <path d="M19.2 14.6a1.55 1.55 0 0 0 .31 1.71l.06.06a1.88 1.88 0 1 1-2.66 2.66l-.06-.06a1.55 1.55 0 0 0-1.71-.31 1.55 1.55 0 0 0-.94 1.42V21a1.88 1.88 0 1 1-3.76 0v-.09a1.55 1.55 0 0 0-1.01-1.42 1.55 1.55 0 0 0-1.71.31l-.06.06a1.88 1.88 0 1 1-2.66-2.66l.06-.06a1.55 1.55 0 0 0 .31-1.71 1.55 1.55 0 0 0-1.42-.94H3a1.88 1.88 0 1 1 0-3.76h.09a1.55 1.55 0 0 0 1.42-1.01 1.55 1.55 0 0 0-.31-1.71l-.06-.06a1.88 1.88 0 1 1 2.66-2.66l.06.06a1.55 1.55 0 0 0 1.71.31h.01A1.55 1.55 0 0 0 9.5 4.01V3a1.88 1.88 0 1 1 3.76 0v.09a1.55 1.55 0 0 0 .94 1.42 1.55 1.55 0 0 0 1.71-.31l.06-.06a1.88 1.88 0 1 1 2.66 2.66l-.06.06a1.55 1.55 0 0 0-.31 1.71v.01c.2.5.68.85 1.23.94H21a1.88 1.88 0 1 1 0 3.76h-.09a1.55 1.55 0 0 0-1.42.94z"></path>
+              </svg>
+            </button>
+
+            <div class="manager" id="manager" aria-hidden="true">
+              <div class="manager-head">
+                <div class="tabs">
+                  <button class="on">添加</button>
+                  <button>分组</button>
+                  <button>设置</button>
+                  <button>词库</button>
+                </div>
+                <button class="m-close" id="managerClose" title="关闭" aria-label="关闭管理面板">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+                    <path d="M18 6 6 18M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+              <div class="manager-body">
+                <label class="field"><span>单词</span><input placeholder="如 serendipity"></label>
+                <label class="field"><span>分组</span><select><option>示例</option><option>考研核心词</option></select></label>
+                <div class="actions">
+                  <button class="primary">快速添加</button>
+                  <button>LLM 补全预览</button>
+                </div>
+                <p class="tip">配置 LLM 后，只需输入一个单词即可自动补全音标、多词性、短语和例句。管理面板材质随方案同步切换。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="caption">360 × 520 · 实际窗口尺寸 · 其余区域透明</div>
+      </div>
+
+      <aside class="notes">
+        <span class="ntag" id="noteTag">推荐</span>
+        <h2 id="noteTitle">A · 烟熏玻璃</h2>
+        <p class="desc" id="noteDesc">深色烟熏底 + 30px 模糊，白字在任何桌面背景下都有稳定对比度。最接近“液态玻璃”的深色形态。</p>
+        <ul id="noteList">
+          <li>白色桌面上不再出现白字白底，详情逐行可读</li>
+          <li>青色只留给音标、词性和少量强调，层级清楚</li>
+          <li>适合作为默认方案，长时间显示不抢眼</li>
+        </ul>
+        <div class="pick">在对话里回复方案名（如「A」）即按该方案落地到真实组件。</div>
+      </aside>
+    </div>
+
+    <section class="changes">
+      <h3>这一版同时修掉的显示问题</h3>
+      <div class="change-grid">
+        <div class="change"><b>日间可读性</b><span>玻璃底色加深/加墨，文字不再依赖桌面颜色，白色壁纸下也清晰。</span></div>
+        <div class="change"><b>详情不再被裁</b><span>悬停时头部收窄，详情占满窗口剩余高度，内部滚动而不是溢出 520px。</span></div>
+        <div class="change"><b>层级与留白</b><span>单词 31px、音标 13.5px、正文 12.8px，分组、标题、正文、注释四级分明。</span></div>
+        <div class="change"><b>例句可扫读</b><span>英文例句与中文译文分两行；短语英文高亮、释义弱化，扫一眼就懂。</span></div>
+      </div>
+    </section>
+  </div>
+
+<script>
+  const WORDS = [
+    {
+      word: 'serendipity',
+      phonetic: '/ˌserənˈdɪpəti/',
+      group: '示例',
+      defs: [['n.', '意外发现珍奇事物的运气；机缘巧合']],
+      phrases: [
+        ['by pure serendipity', '纯属机缘巧合'],
+        ['a serendipitous discovery', '偶然的发现']
+      ],
+      examples: [
+        ['They met by serendipity at a coffee shop in Paris.', '他们在巴黎一家咖啡馆偶然相遇。'],
+        ["The vaccine's success was partly a stroke of serendipity.", '这款疫苗的成功部分源于机缘巧合。']
+      ]
+    },
+    {
+      word: 'scrutinize',
+      phonetic: '/ˈskruːtənaɪz/',
+      group: '示例',
+      defs: [['v.', '仔细检查，详尽审查']],
+      phrases: [
+        ['scrutinize the details', '仔细核查细节'],
+        ['under scrutiny', '受到审查']
+      ],
+      examples: [
+        ['The committee will scrutinize every expense claim.', '委员会将仔细审查每一笔费用申请。'],
+        ['Her work came under intense public scrutiny.', '她的工作受到公众的严密审视。']
+      ]
+    },
+    {
+      word: 'resilient',
+      phonetic: '',
+      group: '示例',
+      defs: [['adj.', '有韧性的，能迅速恢复的']],
+      phrases: [],
+      examples: []
+    }
+  ]
+
+  const NOTES = {
+    smoke: {
+      tag: '推荐',
+      title: 'A · 烟熏玻璃',
+      desc: '深色烟熏底 + 30px 模糊，白字在任何桌面背景下都有稳定对比度。最接近“液态玻璃”的深色形态。',
+      list: [
+        '白色桌面上不再出现白字白底，详情逐行可读',
+        '青色只留给音标、词性和少量强调，层级清楚',
+        '适合作为默认方案，长时间显示不抢眼'
+      ]
+    },
+    frost: {
+      tag: '浅色取向',
+      title: 'B · 霜白玻璃',
+      desc: '亮面磨砂 + 墨色文字，浅色桌面上最自然、轻盈；深色壁纸下会变成一块明亮的卡片。',
+      list: [
+        '白底上文字对比度最高，白天使用最舒服',
+        '更接近 iOS 浅色“液态玻璃”，存在感轻',
+        '深色壁纸下亮度反差较大，看个人偏好'
+      ]
+    },
+    aurora: {
+      tag: '风格取向',
+      title: 'C · 极光玻璃',
+      desc: '深底上叠一层青紫极光，保留深色可读性的同时更有记忆点；光线会随背景缓慢变化。',
+      list: [
+        '白底、深底、彩底都保持文字清晰',
+        '青紫渐变让卡片更像“玻璃摆件”',
+        '风格更强烈，适合喜欢一点色彩的人'
+      ]
+    }
+  }
+
+  const body = document.body
+  const sheet = document.getElementById('sheet')
+  const desktop = document.getElementById('desktop')
+  const wordText = document.getElementById('wordText')
+  const phoneticText = document.getElementById('phoneticText')
+  const pill = document.getElementById('pill')
+  const detail = document.getElementById('detail')
+  const pin = document.getElementById('pin')
+  const manager = document.getElementById('manager')
+  const managerToggle = document.getElementById('managerToggle')
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+
+  function renderDetail(w) {
+    let html = ''
+    if (w.defs.length) {
+      html += '<section class="block"><div class="label">词性与释义</div>'
+      html += w.defs.map((d) => `<div class="row"><span class="pos">${esc(d[0])}</span><span>${esc(d[1])}</span></div>`).join('')
+      html += '</section>'
+    }
+    if (w.phrases.length) {
+      html += '<section class="block"><div class="label">常用短语</div>'
+      html += w.phrases.map((p) => `<div class="row"><span class="bullet"></span><span><span class="phrase-en">${esc(p[0])}</span><span class="phrase-zh">：${esc(p[1])}</span></span></div>`).join('')
+      html += '</section>'
+    }
+    if (w.examples.length) {
+      html += '<section class="block"><div class="label">例句</div>'
+      html += w.examples.map((e) => `<div class="example"><span class="en">${esc(e[0])}</span><span class="zh">${esc(e[1])}</span></div>`).join('')
+      html += '</section>'
+    }
+    if (!w.phrases.length && !w.examples.length) {
+      html += '<div class="empty-note">短语与例句待补全 · 配置 LLM 后可自动生成</div>'
+    }
+    return html
+  }
+
+  function showWord(index) {
+    const w = WORDS[index]
+    wordText.textContent = w.word
+    phoneticText.textContent = w.phonetic || ''
+    phoneticText.style.display = w.phonetic ? '' : 'none'
+    pill.textContent = w.group
+    detail.innerHTML = renderDetail(w)
+    sheet.classList.remove('swap')
+    void sheet.offsetWidth
+    sheet.classList.add('swap')
+  }
+
+  // 悬停展开：进入卡片展开，移出收起（固定展开时保持）
+  sheet.addEventListener('mouseenter', () => sheet.classList.add('open'))
+  sheet.addEventListener('mouseleave', () => { if (!pin.checked) sheet.classList.remove('open') })
+  pin.addEventListener('change', () => sheet.classList.toggle('open', pin.checked))
+
+  document.getElementById('variantSeg').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-variant]')
+    if (!btn) return
+    body.dataset.variant = btn.dataset.variant
+    for (const b of btn.parentElement.children) b.classList.toggle('on', b === btn)
+    const n = NOTES[btn.dataset.variant]
+    document.getElementById('noteTag').textContent = n.tag
+    document.getElementById('noteTitle').textContent = n.title
+    document.getElementById('noteDesc').textContent = n.desc
+    document.getElementById('noteList').innerHTML = n.list.map((t) => `<li>${t}</li>`).join('')
+  })
+
+  document.getElementById('wallSeg').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-wall]')
+    if (!btn) return
+    desktop.dataset.wall = btn.dataset.wall
+    for (const b of btn.parentElement.children) b.classList.toggle('on', b === btn)
+  })
+
+  document.getElementById('wordSeg').addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-word]')
+    if (!btn) return
+    showWord(Number(btn.dataset.word))
+    for (const b of btn.parentElement.children) b.classList.toggle('on', b === btn)
+  })
+
+  // 管理面板
+  const setManager = (show) => {
+    manager.classList.toggle('show', show)
+    manager.setAttribute('aria-hidden', String(!show))
+    managerToggle.checked = show
+    if (show) manager.classList.remove('open')
+  }
+  document.getElementById('gear').addEventListener('click', () => setManager(true))
+  document.getElementById('managerClose').addEventListener('click', () => setManager(false))
+  managerToggle.addEventListener('change', () => setManager(managerToggle.checked))
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setManager(false) })
+
+  showWord(0)
+</script>
+</body>
+</html>

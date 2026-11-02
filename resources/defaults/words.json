@@ -1,0 +1,37 @@
+{
+  "words": [
+    {
+      "id": "welcome-resilient",
+      "word": "resilient",
+      "group": "示例",
+      "phonetic": "/rɪˈzɪliənt/",
+      "definitions": [{ "partOfSpeech": "adj.", "meaning": "有韧性的；能迅速恢复的" }],
+      "phrases": ["a resilient person：有韧性的人", "a resilient economy：有恢复力的经济"],
+      "examples": ["She remained resilient in the face of setbacks.\n面对挫折，她依然坚韧。"],
+      "enriched": true,
+      "createdAt": 1
+    },
+    {
+      "id": "welcome-scrutinize",
+      "word": "scrutinize",
+      "group": "示例",
+      "phonetic": "/ˈskruːtənaɪz/",
+      "definitions": [{ "partOfSpeech": "v.", "meaning": "仔细检查；认真审视" }],
+      "phrases": ["scrutinize the details：仔细检查细节", "scrutinize a report：审查报告"],
+      "examples": ["Please scrutinize the report before making a decision.\n做决定前，请仔细审阅这份报告。"],
+      "enriched": true,
+      "createdAt": 2
+    },
+    {
+      "id": "welcome-serendipity",
+      "word": "serendipity",
+      "group": "示例",
+      "phonetic": "/ˌserənˈdɪpəti/",
+      "definitions": [{ "partOfSpeech": "n.", "meaning": "意外发现美好事物的机缘；意外之喜" }],
+      "phrases": ["by serendipity：机缘巧合地", "a moment of serendipity：意外惊喜的一刻"],
+      "examples": ["We found this little bookshop by serendipity.\n我们机缘巧合地发现了这家小书店。"],
+      "enriched": true,
+      "createdAt": 3
+    }
+  ]
+}

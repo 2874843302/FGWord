@@ -1,0 +1,46 @@
+appId: com.wordglass.desktop
+productName: 浮光单词
+executableName: WordGlass
+copyright: Copyright © Word Glass
+directories:
+  output: release
+electronDist: node_modules/electron/dist
+asar: true
+asarUnpack:
+  - scripts/*.ps1
+files:
+  - electron/**/*.js
+  - dist/**/*
+  - assets/tray.ico
+  - assets/tray.png
+  - assets/logo.png
+  - scripts/capture-selection.ps1
+  - scripts/synthesize-pronunciation.ps1
+  - resources/dictionary/**/*
+  - resources/defaults/words.json
+  - package.json
+publish: null
+win:
+  icon: assets/tray.ico
+  signExecutable: false
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  artifactName: WordGlass-Setup-${version}-${arch}.${ext}
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 浮光单词
+  uninstallDisplayName: 浮光单词 ${version}
+  installerIcon: assets/tray.ico
+  uninstallerIcon: assets/tray.ico
+  installerHeaderIcon: assets/tray.ico
+  installerLanguages:
+    - zh_CN
+    - en_US
+  language: "2052"
+  deleteAppDataOnUninstall: false

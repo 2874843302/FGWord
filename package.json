@@ -1,0 +1,56 @@
+{
+  "name": "word-glass",
+  "version": "0.1.0",
+  "description": "桌面液态玻璃单词卡片：置顶轮播、悬停详情、LLM 自动补全词条",
+  "productName": "浮光单词",
+  "author": "Word Glass",
+  "license": "UNLICENSED",
+  "main": "electron/main.js",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/2874843302/FGWord.git"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:renderer\" \"npm:dev:electron\"",
+    "dev:renderer": "vite",
+    "dev:electron": "wait-on tcp:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
+    "build": "vite build && tsc --noEmit",
+    "package:win": "npm run build && electron-builder --win --x64 --publish never",
+    "start": "electron .",
+    "enrich": "node scripts/enrich-word.mjs",
+    "dictionary:prepare": "node scripts/prepare-dictionary.mjs",
+    "test": "node --test tests/*.test.cjs",
+    "test:electron": "electron tests/electron-smoke.cjs",
+    "test:selection": "electron tests/selection-smoke.cjs",
+    "test:window-completion": "electron tests/window-completion-smoke.cjs",
+    "test:next-word": "electron tests/next-word-smoke.cjs",
+    "test:autostart": "electron tests/autostart-smoke.cjs",
+    "test:autostart-native": "electron tests/autostart-native.cjs",
+    "test:tray-storage": "electron tests/tray-storage-smoke.cjs",
+    "test:mouse-passthrough": "electron tests/mouse-passthrough-smoke.cjs",
+    "test:pronunciation": "electron tests/pronunciation-smoke.cjs",
+    "test:example-translations": "electron tests/example-translations-smoke.cjs",
+    "test:packaged": "node tests/packaged-app-smoke.cjs"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "cross-env": "^7.0.3",
+    "electron": "^33.3.1",
+    "electron-builder": "26.18.0",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.5",
+    "wait-on": "^8.0.1"
+  }
+}
