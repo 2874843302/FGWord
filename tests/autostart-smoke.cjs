@@ -1,7 +1,7 @@
 const { app } = require('electron')
 const fs = require('fs')
 const path = require('path')
-const crypto = require('crypto')
+const { snapshotProductionData } = require('./helpers/production-data')
 const assert = require('node:assert/strict')
 const root = path.resolve(__dirname,'..')
 const directory = path.join(root,'.test',`autostart-${Date.now()}`)
@@ -22,7 +22,7 @@ app.setLoginItemSettings = options => {
   items = items.filter(item=>item.name!==options.name)
   if(options.openAtLogin) items.push({...options,scope:'user'})
 }
-const hashes = () => ['words.json','settings.json'].map(name=>crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'data',name))).digest('hex'))
+const hashes = () => snapshotProductionData(root)
 const before = hashes()
 const delay = ms=>new Promise(resolve=>setTimeout(resolve,ms))
 async function until(check) {

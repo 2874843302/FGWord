@@ -1,7 +1,7 @@
 const { app } = require('electron')
 const fs = require('fs')
 const path = require('path')
-const crypto = require('crypto')
+const { snapshotProductionData } = require('./helpers/production-data')
 const assert = require('node:assert/strict')
 const root = path.resolve(__dirname, '..')
 const directory = path.join(root, '.test', `window-completion-${Date.now()}`)
@@ -20,7 +20,7 @@ process.env.WORD_GLASS_DATA_DIR = directory
 process.env.WORD_GLASS_DISABLE_TRAY = '1'
 process.env.WORD_GLASS_DISABLE_SHORTCUT = '1'
 delete process.env.VITE_DEV_SERVER_URL
-const productionHashes = () => ['words.json', 'settings.json'].map(name => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, 'data', name))).digest('hex'))
+const productionHashes = () => snapshotProductionData(root)
 const before = productionHashes()
 const requests = []
 global.fetch = async (url, options) => {

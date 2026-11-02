@@ -2,7 +2,7 @@ const { app, ipcMain, screen } = require('electron')
 const assert = require('node:assert/strict')
 const fs = require('fs')
 const path = require('path')
-const crypto = require('crypto')
+const { snapshotProductionData } = require('./helpers/production-data')
 const { execFile } = require('child_process')
 const { promisify } = require('util')
 const root = path.resolve(__dirname, '..')
@@ -16,8 +16,7 @@ process.env.WORD_GLASS_DATA_DIR = directory
 process.env.WORD_GLASS_DISABLE_TRAY = '1'
 process.env.WORD_GLASS_DISABLE_SHORTCUT = '1'
 delete process.env.VITE_DEV_SERVER_URL
-const productionHashes = () => ['words.json', 'settings.json'].map(name =>
-  crypto.createHash('sha256').update(fs.readFileSync(path.join(root, 'data', name))).digest('hex'))
+const productionHashes = () => snapshotProductionData(root)
 const before = productionHashes()
 let cursor = { x: -10000, y: -10000 }, ignored = null, latestLayout = null
 // Querying a fixture cursor never moves or clicks the user's mouse.

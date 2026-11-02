@@ -2,7 +2,7 @@ const { app, globalShortcut } = require('electron')
 const fs = require('fs')
 const path = require('path')
 const assert = require('node:assert/strict')
-const crypto = require('crypto')
+const { snapshotProductionData } = require('./helpers/production-data')
 const root = path.resolve(__dirname, '..')
 const directory = path.join(root, '.test', `tray-storage-${Date.now()}`)
 const reports = path.join(root, '.test/report')
@@ -13,8 +13,7 @@ delete process.env.WORD_GLASS_DISABLE_TRAY
 delete process.env.WORD_GLASS_DISABLE_SHORTCUT
 delete process.env.VITE_DEV_SERVER_URL
 delete process.env.WORD_GLASS_SMOKE
-const productionHashes = () => ['words.json', 'settings.json'].map((name) =>
-  crypto.createHash('sha256').update(fs.readFileSync(path.join(root, 'data', name))).digest('hex'))
+const productionHashes = () => snapshotProductionData(root)
 const before = productionHashes()
 const legacy = { id: 'legacy', word: 'ReSiLiEnT', group: '日常', phonetic: '/test/',
   definitions: [{ partOfSpeech: 'adj.', meaning: '保留自定义释义' }], phrases: [], examples: [], createdAt: 1 }

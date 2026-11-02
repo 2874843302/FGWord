@@ -1,7 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const assert = require('node:assert/strict')
-const crypto = require('crypto')
+const { hashFile: hash } = require('./helpers/production-data')
 const { spawn } = require('child_process')
 const { once } = require('events')
 const asar = require('@electron/asar')
@@ -12,8 +12,6 @@ const archive = path.join(appDirectory, 'resources/app.asar')
 const directory = path.resolve(process.env.WORD_GLASS_PACKAGE_QA_DIR || path.join(root, '.test', `packaged-${Date.now()}`))
 fs.mkdirSync(directory, { recursive: true })
 fs.mkdirSync(path.join(root, '.test/report'), { recursive: true })
-// A fresh checkout has no personal data/ directory. Still verify any existing data is untouched.
-const hash = file => fs.existsSync(file) ? crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') : null
 const before = ['words.json', 'settings.json'].map(name => hash(path.join(root, 'data', name)))
 const entries = asar.listPackage(archive).map(entry => entry.replace(/\\/g, '/'))
 assert.ok(!entries.some(entry => /^\/(?:data|\.test|tests|src)(?:\/|$)/.test(entry)), 'private data and development fixtures excluded')

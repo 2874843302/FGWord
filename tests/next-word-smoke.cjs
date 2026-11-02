@@ -2,7 +2,7 @@ const { app, BrowserWindow, globalShortcut, screen } = require('electron')
 const assert = require('node:assert/strict')
 const fs = require('fs')
 const path = require('path')
-const crypto = require('crypto')
+const { snapshotProductionData } = require('./helpers/production-data')
 const root = path.resolve(__dirname, '..')
 const directory = path.join(root, '.test', `next-word-${Date.now()}`)
 fs.mkdirSync(directory, { recursive: true })
@@ -22,7 +22,7 @@ globalShortcut.register = (key, callback) => {
 }
 globalShortcut.unregister = key => shortcuts.delete(key)
 globalShortcut.unregisterAll = () => shortcuts.clear()
-const hashes = () => ['words.json','settings.json'].map(name => crypto.createHash('sha256').update(fs.readFileSync(path.join(root,'data',name))).digest('hex'))
+const hashes = () => snapshotProductionData(root)
 const before = hashes()
 const delay = ms => new Promise(resolve => setTimeout(resolve,ms))
 async function until(check) {

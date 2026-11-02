@@ -2,7 +2,7 @@ const { app } = require('electron')
 const fs = require('fs')
 const path = require('path')
 const assert = require('node:assert/strict')
-const crypto = require('crypto')
+const { snapshotProductionData } = require('./helpers/production-data')
 
 const root = path.resolve(__dirname, '..')
 const directory = path.join(root, '.test', `electron-${Date.now()}`)
@@ -14,9 +14,7 @@ process.env.WORD_GLASS_DISABLE_SHORTCUT = '1'
 process.env.WORD_GLASS_DISABLE_TRAY = '1'
 delete process.env.VITE_DEV_SERVER_URL
 delete process.env.WORD_GLASS_SMOKE
-const productionFiles = ['words.json', 'settings.json'].map((name) => path.join(root, 'data', name))
-const hashes = () => productionFiles.map((file) => fs.existsSync(file)
-  ? crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex') : null)
+const hashes = () => snapshotProductionData(root)
 const before = hashes()
 const customDefinition = { partOfSpeech: 'adj.', meaning: '保留我的自定义中文释义' }
 fs.writeFileSync(path.join(directory, 'words.json'), JSON.stringify({ words: [{

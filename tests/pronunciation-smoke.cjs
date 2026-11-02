@@ -2,7 +2,7 @@ const { app } = require('electron')
 const assert = require('node:assert/strict')
 const fs = require('fs')
 const path = require('path')
-const crypto = require('crypto')
+const { snapshotProductionData } = require('./helpers/production-data')
 const root = path.resolve(__dirname, '..')
 const directory = path.join(root, '.test', `pronunciation-${Date.now()}`)
 fs.mkdirSync(directory, { recursive: true })
@@ -17,7 +17,7 @@ process.env.WORD_GLASS_DATA_DIR = directory
 process.env.WORD_GLASS_DISABLE_SHORTCUT = '1'
 process.env.WORD_GLASS_DISABLE_TRAY = '1'
 delete process.env.VITE_DEV_SERVER_URL
-const hashes = () => ['words.json', 'settings.json'].map(name => crypto.createHash('sha256').update(fs.readFileSync(path.join(root, 'data', name))).digest('hex'))
+const hashes = () => snapshotProductionData(root)
 const before = hashes()
 const requested = [], finished = []
 const service = require('../electron/pronunciation')
